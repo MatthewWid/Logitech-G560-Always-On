@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
+from infi.systray import SysTrayIcon
 
 
 def int_or_str(text):
@@ -23,7 +24,7 @@ parser.add_argument("-a", "--amplitude", type=float,
                     default=0.1, help="amplitude (default: %(default)s)")
 parser.add_argument("-f", "--frequency", type=float, default=40,
                     help="frequency in Hz (default: %(default)s)")
-parser.add_argument("-d", "--duration", type=float, default=0.2,
+parser.add_argument("-d", "--duration", type=float, default=0.1,
                     help="duration (in seconds) to emit tone for (default: %(default)s)")
 parser.add_argument("-i", "--interval", type=float, default=240,
                     help="interval (in seconds) between tone being played (default: %(default)s)")
@@ -86,6 +87,23 @@ print("Frequency (Hz):", args.frequency)
 print("Duration (Seconds):", args.duration)
 print("Interval (Seconds):", args.interval)
 
+interrupted = False
+
+
+def on_quit_callback():
+    print("Quit command issued")
+    global interrupted
+    interrupted = True
+
+
+systray = SysTrayIcon("icon.ico", "Logitech G560 Always-On",
+                      on_quit=on_quit_callback)
+systray.start()
+
 while True:
+    if interrupted:
+        print("Exiting program")
+        break
+
     play_tone()
     time.sleep(args.interval)
