@@ -1,25 +1,91 @@
-import subprocess
+import sys
 import time
-import win32gui
-import pyautogui
+import argparse
+import numpy as np
+import sounddevice as sd
+import soundfile as sf
 
-subprocess.run(["C:\\Program Files\\LGHUB\\lghub.exe"])
 
-time.sleep(1)
+def int_or_str(text):
+    try:
+        return int(text)
+    except ValueError:
+        return text
 
-hwnd = win32gui.FindWindow(None, 'LGHUB')
-rect = win32gui.GetWindowRect(hwnd)
-winX = rect[0]
-winY = rect[1]
-winW = rect[2] - winX
-winH = rect[3] - winY
 
-prevMouseX, prevMouseY = pyautogui.position()
+parser = argparse.ArgumentParser(prog="Logitech G560 Always-On",
+                                 description="Keeps the Logitech G560 speakers on at all times.")
+parser.add_argument("-l", "--list-devices",
+                    action="store_true", help="list all devices with 'G560' in their display name.")
+parser.add_argument("-o", "--output-device", type=int_or_str,
+                    help="output device (numeric ID or substring)")
+parser.add_argument("-a", "--amplitude", type=float,
+                    default=0.1, help="amplitude (default: %(default)s)")
+parser.add_argument("-f", "--frequency", type=float, default=40,
+                    help="frequency in Hz (default: %(default)s)")
+parser.add_argument("-d", "--duration", type=float, default=0.2,
+                    help="duration (in seconds) to emit tone for (default: %(default)s)")
+parser.add_argument("-i", "--interval", type=float, default=240,
+                    help="interval (in seconds) between tone being played (default: %(default)s)")
+args, remaining_args = parser.parse_known_args()
 
-closeButtonX, closeButtonY = winX + winW - 15, winY + 15
+if args.list_devices:
+    for device in sd.query_devices():
+        if "G560" in device["name"]:
+            print(device["index"], device["name"])
+    parser.exit(0)
 
-pyautogui.moveTo(closeButtonX, closeButtonY)
+if not args.output_device:
+    print("Device ID is required\n")
+    parser.print_help()
+    parser.exit(1)
 
-pyautogui.click(closeButtonX, closeButtonY)
+sd.default.device = 1, 22
+sd.default.samplerate = 44100
+sd.default.channels = 2
 
-pyautogui.moveTo(prevMouseX, prevMouseY)
+
+def play_tone():
+    print(time.strftime("%X %x"), "|",
+          f"Emitting tone to device {args.output_device} at {args.frequency}Hz and {args.amplitude} amplitude for {args.duration}s")
+
+    start_index = 0
+
+    try:
+        samplerate = sd.query_devices(args.output_device, "output")[
+            "default_samplerate"]
+
+        def callback(outdata, frames, time, status):
+            if status:
+                print(status, file=sys.stderr)
+
+            nonlocal start_index
+
+            t = (start_index + np.arange(frames)) / samplerate
+            t = t.reshape(-1, 1)
+
+            outdata[:] = args.amplitude * \
+                np.sin(2 * np.pi * args.frequency * t)
+
+            start_index += frames
+
+        with sd.OutputStream(device=args.output_device, channels=1, callback=callback, samplerate=samplerate):
+            time.sleep(args.duration)
+    except KeyboardInterrupt:
+        print('\nInterrupted by user')
+        parser.exit(0)
+    except Exception as e:
+        print(type(e).__name__ + ': ' + str(e))
+        parser.exit(1)
+
+
+print("Logitech G560 Always-On")
+print("Device:", args.output_device)
+print("Amplitude:", args.amplitude)
+print("Frequency (Hz):", args.frequency)
+print("Duration (Seconds):", args.duration)
+print("Interval (Seconds):", args.interval)
+
+while True:
+    play_tone()
+    time.sleep(args.interval)
