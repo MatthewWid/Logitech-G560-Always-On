@@ -22,11 +22,11 @@ parser.add_argument("-o", "--output-device", type=int_or_str,
                     help="output device (numeric ID or substring)")
 parser.add_argument("-a", "--amplitude", type=float,
                     default=0.1, help="amplitude (default: %(default)s)")
-parser.add_argument("-f", "--frequency", type=float, default=40,
+parser.add_argument("-f", "--frequency", type=float, default=22,
                     help="frequency in Hz (default: %(default)s)")
 parser.add_argument("-d", "--duration", type=float, default=0.1,
                     help="duration (in seconds) to emit tone for (default: %(default)s)")
-parser.add_argument("-i", "--interval", type=float, default=240,
+parser.add_argument("-i", "--interval", type=float, default=180,
                     help="interval (in seconds) between tone being played (default: %(default)s)")
 args, remaining_args = parser.parse_known_args()
 
