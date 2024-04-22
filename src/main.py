@@ -18,6 +18,8 @@ parser = argparse.ArgumentParser(prog="Logitech G560 Always-On",
                                  description="Keeps the Logitech G560 speakers on at all times.")
 parser.add_argument("-l", "--list-devices",
                     action="store_true", help="list all devices with 'G560' in their display name.")
+parser.add_argument("--list-host-apis", action="store_true",
+                    help="list all sound host APIs.")
 parser.add_argument("-o", "--output-device", type=int_or_str,
                     help="output device ID. If not given, will attempt to automatically detect device ID.")
 parser.add_argument("-a", "--amplitude", type=float,
@@ -35,6 +37,17 @@ if args.list_devices:
     for device in sd.query_devices():
         if "G560" in device["name"]:
             print(device["index"], device["name"])
+
+    if not args.list_host_apis:
+        parser.exit(0)
+
+if args.list_host_apis:
+    for host_api in sd.query_hostapis():
+        print(host_api["name"])
+        print("\tDevice IDs:", host_api["devices"])
+        print("\tDefault Device IDs (Input / Output):",
+              host_api["default_input_device"], "/", host_api["default_output_device"])
+
     parser.exit(0)
 
 
