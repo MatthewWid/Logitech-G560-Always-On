@@ -36,7 +36,12 @@ args, remaining_args = parser.parse_known_args()
 if args.list_devices:
     for device in sd.query_devices():
         if "G560" in device["name"]:
-            print(device["index"], device["name"])
+            print(device["name"])
+            print("\tDevice ID:", device["index"])
+            print("\tHost API ID:", device["hostapi"])
+            print("\tSample Rate (Hz):", device["default_samplerate"])
+            print("\tMaximum Channels (Input / Output):",
+                  device["max_input_channels"], "/", device["max_output_channels"])
 
     if not args.list_host_apis:
         parser.exit(0)
@@ -128,11 +133,12 @@ def play_tone():
 
 
 print("Logitech G560 Always-On")
-print("Device ID:", output_device_id)
-print("Amplitude:", args.amplitude)
-print("Frequency (Hz):", args.frequency)
-print("Duration (Seconds):", args.duration)
-print("Interval (Seconds):", args.interval)
+print("\tDevice ID:", output_device_id)
+print("\tAmplitude:", args.amplitude)
+print("\tFrequency (Hz):", args.frequency)
+print("\tDuration (Seconds):", args.duration)
+print("\tInterval (Seconds):", args.interval)
+print("\n")
 
 interrupted = False
 
