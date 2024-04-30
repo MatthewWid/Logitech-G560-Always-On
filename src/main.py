@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import argparse
@@ -143,8 +144,7 @@ print("\n")
 interrupted = False
 
 
-def on_quit_callback():
-    print("Quit command issued")
+def on_quit_callback(systray):
     global interrupted
     interrupted = True
 
@@ -158,5 +158,14 @@ while True:
         print("Exiting program")
         break
 
-    play_tone()
-    time.sleep(args.interval)
+    try:
+        play_tone()
+        time.sleep(args.interval)
+    except KeyboardInterrupt:
+        break
+
+try:
+    systray.shutdown()
+    exit(0)
+except SystemExit:
+    os._exit(0)
